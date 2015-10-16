@@ -5,6 +5,12 @@ fopen(s);
 setCounts(s,0,0);
 global a
 a=true;
+global x;
+x = 0.0;
+global y;
+y = 0.0;
+global angle;
+angle = 0.0;
 while a
     forward(s)
     wallFollow(s)
@@ -30,11 +36,25 @@ function wallFollow(s)
                 fprintf(s,'D,5,5');
                 fscanf(s);
             end
+            odometry(s)
             pause(.1)
          else
              halt(s);
          end
     end
+end
+
+function odometry(s)
+global angle;
+global x;
+global y;
+counts = readCounts(s);
+angle = angle - 0.5*(counts(1) - counts(2))/(2R);
+x = x + 0.5*(counts(1) + counts(2))*cos(angle); 
+y = y + 0.5*(counts(1) + counts(2)) *sin(angle); 
+x   `
+setCounts(s,0,0);
+ 
 end
 
 function forward(s) 
