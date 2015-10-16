@@ -11,8 +11,9 @@ x = 0.0;
 global y;
 y = 0.0;
 global angle;
-
 angle = 0.0;
+global countsPrev;
+countsPrev = 0;
 global xlist;
 xlist = [];
 global ylist;
@@ -24,28 +25,28 @@ end
 end
 
 function wallFollow(s)
-    sensorVals = readIR(s);
-    while sensorVals(1)>70 || sensorVals(3)>180
-        sensorVals = readIR(s);
+    sensorVals = readIR(s)
+    while sensorVals(1)>70 || sensorVals(3)>130 || sensorVals(5) > 130
+        sensorVals = readIR(s)
         if sensorVals(8)<200
             disp('WALL FOLLOWING');
-            if sensorVals(1)> 170 || sensorVals(3)>170
+            if sensorVals(1)> 110 || sensorVals(2) > 130 || sensorVals(3)>130 || sensorVals(4) >130 || sensorVals(5) > 110
                 disp('TOO CLOSE');
-                fprintf(s,'D,2,-1');
+                fprintf(s,'D,1,-1');
                 fscanf(s);
-            elseif sensorVals(1) < 120  
+            elseif sensorVals(1) < 90  
                 disp('TOO FAR AWAY');
-                fprintf(s,'D,-1,2');
+                fprintf(s,'D,-1,1');
                 fscanf(s);
             else
                 disp('Following wall');
-                fprintf(s,'D,5,5');
+                fprintf(s,'D,3,3');
                 fscanf(s);
             end
             odometry(s)
-            pause(.1)
+            pause(.05)
          else
-             halt(s);
+             %halt(s);
          end
     end
 end
@@ -54,32 +55,35 @@ function odometry(s)
 global angle;
 global x;
 global y;
-counts = readCounts(s)
-angle = angle - 0.5*(counts(1) - counts(2))/(5.4);
-y = y + 0.5*(counts(1) + counts(2))*cos(angle); 
-x = x + 0.5*(counts(1) + counts(2)) *sin(angle); 
+global countsPrev;
+counts = readCounts(s);
+countsCur = counts- countsPrev; 
+countsPrev = counts;
+angle = angle - (countsCur(1) - countsCur(2))/(662); %66.2 = 5.4(khepera diameter) *122.59259
+y = y + 0.5*(countsCur(1) + countsCur(2))*cos(angle); 
+x = x + 0.5*(countsCur(1) + countsCur(2))*sin(angle);
 global xlist;
 global ylist;
 xlist = cat(2,xlist,x);
 ylist = cat(2,ylist,y);
                                                                                                               
 plot(xlist,ylist);
-setCounts(s,0,0);
+
  
 end
 
 function forward(s) 
-fprintf(s,'D,5,5');
+fprintf(s,'D,3,3');
 fscanf(s);
-sensorVals = readIR(s);
+sensorVals = readIR(s)
 disp('hi, im driving forward');
-while (sensorVals(3)<155)
-   sensorVals = readIR(s);
+while (sensorVals(3)<130 && sensorVals(5) < 130 && sensorVals(2) <130)
+   sensorVals = readIR(s)
    if sensorVals(8) >200
-       halt(s)
+       %halt(s)
    end
    odometry(s)
-   pause(.1)
+   pause(.05)
 end
 fprintf(s,'D,0,0');
 fscanf(s);

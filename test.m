@@ -3,6 +3,8 @@ s = serial('/dev/ttyS0');
 fopen(s);
 setCounts(s,0,0);
 figure;
+global countsPrev;
+countsPrev = 0;
 global a
 a=true;
 global x;
@@ -20,6 +22,9 @@ fprintf(s,'D,5,5');
 fscanf(s);
 odometry(s)
 pause(3);
+%pause(7.35)
+% counts = readCounts(s)
+
 odometry(s)
 fprintf(s,'D,0,0');
 fscanf(s);
@@ -37,17 +42,20 @@ function odometry(s)
 global angle;
 global x;
 global y;
+global countsPrev;
 counts = readCounts(s);
-angle = angle - 0.5*(counts(1) - counts(2))/(5.4)
-y = y + 0.5*(counts(1) + counts(2))*cos(angle); 
-x = x + 0.5*(counts(1) + counts(2)) *sin(angle); 
+countsCur = counts- countsPrev 
+countsPrev = counts;
+angle = angle - 0.5*(countsCur(1) - countsCur(2))/(662) %66.2 = 5.4(khepera radius) *122.59259
+y = y + 0.5*(countsCur(1) + countsCur(2))*cos(angle); 
+x = x + 0.5*(countsCur(1) + countsCur(2))*sin(angle); 
 global xlist;
 global ylist;
 xlist = cat(2,xlist,x)
 ylist = cat(2,ylist,y)
                                                                                                               
 plot(xlist,ylist);
-setCounts(s,0,0);
+
  
 end
 
