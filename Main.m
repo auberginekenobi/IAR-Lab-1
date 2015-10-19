@@ -58,7 +58,7 @@ function wallFollow(s)
                 disp('TOO CLOSE');
                 fprintf(s,'D,1,-1');
                 fscanf(s);
-            elseif sensorVals(1) < 100  
+            elseif sensorVals(1) < 105  
                 disp('TOO FAR AWAY');
                 fprintf(s,'D,-1,1');
                 fscanf(s);
