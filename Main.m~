@@ -5,7 +5,7 @@ fopen(s);
 setCounts(s,0,0);
 figure; 
 global runTime;
-runTime = 30;
+runTime = 60;
 global a
 a=true;
 global x;
@@ -140,7 +140,6 @@ while a == true
     end
     if x <goalX && y>goalY
         vecAngle = pi/2 - vecAngle;
-    end
     if x > goalX
         vecAngle = vecAngle + pi;
     end
@@ -156,18 +155,13 @@ while a == true
             pause(0.1);
             odometry(s)
             difX = goalX - x;
-%             difY = goalY - y;
+            difY = goalY - y;
             vecAngle = asin(abs(difX)/abs(vecMag));
-            if y <goalY && x > goalX
-                vecAngle = pi/2 - vecAngle;
+            if y <goalY
+                vecAngle = pi/2 - vecAngle;    
                 vecAngle = vecAngle +pi/2;
             end
-            if x <goalX && y>goalY
-                vecAngle = pi/2 - vecAngle;
-            end
-            if x > goalX
-                vecAngle = vecAngle + pi;
-            end
+            vecAngle = vecAngle + pi;
             vecAngle = mod(vecAngle,2*pi);
         end
     else 
@@ -178,18 +172,13 @@ while a == true
             pause(0.1);
             odometry(s)
             difX = goalX - x;
-%             difY = goalY - y;
+            difY = goalY - y;
             vecAngle = asin(abs(difX)/abs(vecMag))
-            if y <goalY && x > goalX
-                vecAngle = pi/2 - vecAngle;
+            if y <goalY
+                vecAngle = pi/2 - vecAngle;    
                 vecAngle = vecAngle +pi/2;
             end
-            if x <goalX && y>goalY
-                vecAngle = pi/2 - vecAngle;
-            end
-            if x > goalX
-                vecAngle = vecAngle + pi;
-            end
+            vecAngle = vecAngle + pi;
             vecAngle = mod(vecAngle,2*pi);
          end
      end
