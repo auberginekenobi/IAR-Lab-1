@@ -5,7 +5,7 @@ fopen(s);
 setCounts(s,0,0);
 figure; 
 global runTime;
-runTime = 30;
+runTime = 50;
 global a
 a=true;
 global x;
@@ -84,7 +84,7 @@ global countsCur;
 counts = readCounts(s);
 countsCur = counts- countsPrev; 
 countsPrev = counts;
-angle = angle - (countsCur(2)- countsCur(1))/(662); %66.2 = 5.4(khepera diameter) *122.59259
+angle = angle - (countsCur(2)- countsCur(1))/(662); %662 = 5.4(khepera diameter) *122.59259
 angle = mod(angle,2*pi);
 y = y + 0.5*(countsCur(1) + countsCur(2))*cos(angle);
 x = x + 0.5*(countsCur(1) + countsCur(2))*sin(angle);
@@ -129,23 +129,7 @@ global x;
 global y;
 global a;
 while a == true 
-    difX = goalX - x;
-    difY = goalY - y;
-    
-    vecMag = sqrt((difX^2) + (difY^2));
-    vecAngle = asin(abs(difX)/abs(vecMag));
-    if y <goalY && x > goalX
-        vecAngle = pi/2 - vecAngle;
-        vecAngle = vecAngle +pi/2;
-    end
-    if x <goalX && y>goalY
-        vecAngle = pi/2 - vecAngle;
-    end
-    if x > goalX
-        vecAngle = vecAngle + pi;
-    end
-       
-    vecAngle = mod(vecAngle,2*pi);
+    vecAngle = getBearing(goalX,goalY);
     odometry(s)
 
     if (angle-vecAngle)<0
@@ -155,20 +139,7 @@ while a == true
             disp('Turning right to bearing');
             pause(0.1);
             odometry(s)
-            difX = goalX - x;
-%             difY = goalY - y;
-            vecAngle = asin(abs(difX)/abs(vecMag));
-            if y <goalY && x > goalX
-                vecAngle = pi/2 - vecAngle;
-                vecAngle = vecAngle +pi/2;
-            end
-            if x <goalX && y>goalY
-                vecAngle = pi/2 - vecAngle;
-            end
-            if x > goalX
-                vecAngle = vecAngle + pi;
-            end
-            vecAngle = mod(vecAngle,2*pi);
+            vecAngle = getBearing(goalX,goalY);
         end
     else 
         while angle > vecAngle+0.2 || angle < vecAngle-0.2
@@ -177,26 +148,14 @@ while a == true
             disp('Turning left to bearing');
             pause(0.1);
             odometry(s)
-            difX = goalX - x;
-%             difY = goalY - y;
-            vecAngle = asin(abs(difX)/abs(vecMag))
-            if y <goalY && x > goalX
-                vecAngle = pi/2 - vecAngle;
-                vecAngle = vecAngle +pi/2;
-            end
-            if x <goalX && y>goalY
-                vecAngle = pi/2 - vecAngle;
-            end
-            if x > goalX
-                vecAngle = vecAngle + pi;
-            end
-            vecAngle = mod(vecAngle,2*pi);
+            vecAngle = getBearing(goalX,goalY);
          end
      end
         odometry(s)
-        sensorVals = readIR(s);
+        sensorVals = readIR(s)
+        % senses and avoids obstacles
         if sensorVals(1)> 140 || sensorVals(2) > 150 || sensorVals(3)>150
-            obstacleFollow(s) 
+            obstacleFollow(s,0,0) 
         end
     
         if ((goalX-200) > x || x > (goalX +200) || (goalY-200) > y || y > (goalY +200) )
@@ -213,23 +172,56 @@ while a == true
 end
 end
 
-function obstacleFollow(s)
+function vecAngle = getBearing(goalX,goalY)
+global x;
+global y;
+
+difX = goalX - x;
+difY = goalY - y;
+
+vecMag = sqrt((difX^2) + (difY^2));
+vecAngle = asin(abs(difX)/abs(vecMag));
+if y <goalY && x > goalX
+    vecAngle = pi/2 - vecAngle;
+    vecAngle = vecAngle +pi/2;
+end
+if x <goalX && y>goalY
+    vecAngle = pi - vecAngle;
+end
+if x > goalX
+    vecAngle = vecAngle + pi;
+end
+
+vecAngle = mod(vecAngle,2*pi);
+
+end
+
+function obstacleFollow(s,goalX,goalY)
+    global angle;
+    
+    vecAngle = getBearing(goalX,goalY);
     sensorVals = readIR(s);
     global currentTime;
     global startTime;
     startTime = clock;
-    while etime(currentTime,startTime) < 3
+    while (abs(vecAngle - angle) > 0.1 || etime(currentTime,startTime) < 3)
+    %while etime(currentTime,startTime) < 3
         if sensorVals(1)> 140 || sensorVals(2) > 150 || sensorVals(3)>150  
             disp('TOO CLOSE');
             fprintf(s,'D,1,-1');
             fscanf(s);
+        elseif sensorVals(1) <100
+            disp('TOO FAR AWAY');
+            fprintf(s,'D,-1,1');
+            fscanf(s);
         else
             disp('Following wall');
-            fprintf(s,'D,3,3');
+            fprintf(s,'D,2,3');
             fscanf(s);
         end
         sensorVals = readIR(s);
         odometry(s)
+        vecAngle = getBearing(goalX,goalY);
         pause(.05)
         currentTime = clock;
     end
