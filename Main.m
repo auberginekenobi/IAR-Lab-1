@@ -5,7 +5,7 @@ fopen(s);
 setCounts(s,0,0);
 figure; 
 global runTime;
-runTime = 50;
+runTime = 40;
 global a
 a=true;
 global x;
@@ -58,7 +58,7 @@ function wallFollow(s)
                 disp('TOO CLOSE');
                 fprintf(s,'D,1,-1');
                 fscanf(s);
-            elseif sensorVals(2) < 120  
+            elseif sensorVals(1) < 100  
                 disp('TOO FAR AWAY');
                 fprintf(s,'D,-1,1');
                 fscanf(s);
@@ -210,7 +210,7 @@ function obstacleFollow(s,goalX,goalY)
             disp('TOO CLOSE');
             fprintf(s,'D,1,-1');
             fscanf(s);
-        elseif sensorVals(1) <100
+        elseif sensorVals(1) <110
             disp('TOO FAR AWAY');
             fprintf(s,'D,-1,1');
             fscanf(s);
@@ -219,6 +219,13 @@ function obstacleFollow(s,goalX,goalY)
             fprintf(s,'D,2,3');
             fscanf(s);
         end
+        % breaks wallfollow after 20 seconds. good for breaking out of infinite
+        % 'obstacles', aka walls.
+        
+        if etime (currentTime,startTime) > 40
+            break;
+        end
+        
         sensorVals = readIR(s);
         odometry(s)
         vecAngle = getBearing(goalX,goalY);
