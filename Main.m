@@ -235,6 +235,18 @@ function obstacleFollow(s,goalX,goalY)
 
 end
 
+function foundfood = pickupFood(s)
+    sensorVals=readIR(s);
+    lightVals=readAmbient(s);
+    foundfood=true;
+    for i=1:8
+        if sensorVals(i)<120 || lightVals(i)>150 %check thresholds for these
+            foundfood=false;
+        end
+    end
+    return foundfood;
+end
+
 function halt(s)
     fprintf(s,'D,0,0');
     fscanf(s);
@@ -262,4 +274,11 @@ fprintf(s,'N');
 sensorString = fscanf(s);
 splitString = regexp(sensorString,',','split');
 sensorVals = cellfun(@str2num,splitString(2:end));
+end
+
+function lightVals = readAmbient(s)
+fprintf(s,'O');
+sensorString = fscanf(s);
+splitString = regexp(sensorString,',','split');
+lightVals = cellfun (@str2num,splitString(2:end));
 end
