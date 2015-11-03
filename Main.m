@@ -1,6 +1,7 @@
 
 function Main
 s = serial('/dev/ttyS0');
+fclose(s);
 fopen(s);
 setCounts(s,0,0);
 figure; 
@@ -237,14 +238,13 @@ end
 
 function foundfood = pickupFood(s)
     sensorVals=readIR(s);
-    lightVals=readAmbient(s);
+    %lightVals=readAmbient(s);
     foundfood=true;
     for i=1:8
-        if sensorVals(i)<120 || lightVals(i)>150 %check thresholds for these
+        if sensorVals(i)<200 %|| lightVals(i)>150 %lightvals is always 500 no matter what, idk why
             foundfood=false;
         end
     end
-    return foundfood;
 end
 
 function halt(s)

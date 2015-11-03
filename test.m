@@ -1,4 +1,4 @@
-function test(s)
+function test()
 s = serial('/dev/ttyS0');
 fopen(s);
 setCounts(s,0,0);
@@ -18,24 +18,9 @@ global xlist;
 xlist = [];
 global ylist;
 ylist =  [];
-fprintf(s,'D,5,5');
-fscanf(s);
-odometry(s)
-pause(3);
-%pause(7.35)
-% counts = readCounts(s)
 
-odometry(s)
-fprintf(s,'D,0,0');
-fscanf(s);
-fprintf(s,'D,-5,-5');
-fscanf(s);
-odometry(s)
-pause(3);
-odometry(s)
-fprintf(s,'D,0,0');
-fscanf(s);
-fclose(s);
+
+
 end
 
 function odometry(s)
