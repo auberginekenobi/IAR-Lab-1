@@ -21,7 +21,7 @@ foodFlag = 0;
 
 
 global runTime;
-runTime = 40;
+runTime = 300;
 global a
 a=true;
 global x;
@@ -55,6 +55,7 @@ end
 %     
 %     % Do your normal robot control stuff
 %     % ...
+    
 %     
 %     
 %     % Check for click on food window
@@ -77,6 +78,9 @@ fscanf(s);
 fclose(s);
 end
 
+function explore(s)
+    goTo(
+    
 
 function wallFollow(s)
     global startTime;
