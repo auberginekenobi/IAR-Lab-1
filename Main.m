@@ -21,7 +21,7 @@ foodFlag = 0;
 
 
 global runTime;
-runTime = 300;
+runTime = 60;
 global a
 a=true;
 global x;
@@ -44,11 +44,12 @@ startTime = clock;
 fix(startTime);
 currentTime = clock;
 while etime(currentTime,startTime) < runTime
-    forward(s)
-    wallFollow(s)
-
+    goTo(s,4258,2875);
     currentTime = clock;
 end
+
+% explore(s)
+
 % Start main loop
 % while(1)
 %     
@@ -75,12 +76,20 @@ end
 goTo(s,0,0)
 fprintf(s,'D,0,0');
 fscanf(s);
+dropFood(s);
 fclose(s);
 end
 
 function explore(s)
-    goTo(
-    
+visitsX = [2842,6717,6930,6195,4364,2576,585,-1586,-1980,-3342];
+visitsY = [1053,2150,3098,5706,4279,3598,6196,6153,4215,2682];
+for i =1:(size(visitsX,2))
+    x = visitsX(i);
+    y = visitsY(i);
+    goTo(s,x,y)
+    i = i +1;
+end
+end
 
 function wallFollow(s)
     global startTime;
@@ -136,9 +145,9 @@ global ylist;
 xlist = cat(2,xlist,x);
 ylist = cat(2,ylist,y);
 figure(figHandle);
-delete(findobj(figHandle,'Color','b'));
+delete(findobj(figHandle,'Color','r'));
 plotHandle = plot(9368.5+xlist,7558.7-ylist);
-plotHandle.Color = 'b';
+plotHandle.Color = 'r';
 title('Khepera Odometry Graph');
 xlabel('x');
 ylabel('y');
@@ -176,45 +185,44 @@ global a;
 while a == true 
     vecAngle = getBearing(goalX,goalY);
     odometry(s)
-
-    if (angle-vecAngle)<0
-        while angle > vecAngle+0.2 || angle < vecAngle-0.2
-            fprintf(s,'D,1,-1');
-            fscanf(s);
-            disp('Turning right to bearing');
-            pause(0.1);
-            odometry(s)
-            vecAngle = getBearing(goalX,goalY);
+    if ((goalX-122) > x || x > (goalX +122) || (goalY-122) > y || y > (goalY +122) )
+        if (angle-vecAngle)<0
+            while angle > vecAngle+0.2 || angle < vecAngle-0.2
+                fprintf(s,'D,2,-2');
+                fscanf(s);
+                disp('Turning right to bearing');
+                pause(0.1);
+                odometry(s)
+                vecAngle = getBearing(goalX,goalY);
+            end
+        else 
+            while angle > vecAngle+0.2 || angle < vecAngle-0.2
+                fprintf(s,'D,-2,2');
+                fscanf(s);
+                disp('Turning left to bearing');
+                pause(0.1);
+                odometry(s)
+                vecAngle = getBearing(goalX,goalY);
+             end
         end
-    else 
-        while angle > vecAngle+0.2 || angle < vecAngle-0.2
-            fprintf(s,'D,-1,1');
-            fscanf(s);
-            disp('Turning left to bearing');
-            pause(0.1);
-            odometry(s)
-            vecAngle = getBearing(goalX,goalY);
-         end
-     end
         odometry(s)
-        sensorVals = readIR(s)
+        sensorVals = readIR(s);
         % senses and avoids obstacles
-        if sensorVals(1)> 140 || sensorVals(2) > 150 || sensorVals(3)>150
-            obstacleFollow(s,0,0) 
+        if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 140
+            obstacleFollow(s,goalX,goalY)
         end
-    
-        if ((goalX-200) > x || x > (goalX +200) || (goalY-200) > y || y > (goalY +200) )
-        fprintf(s,'D,3,3');
+        fprintf(s,'D,5,5');
         fscanf(s);
         disp('Moving forward to goal');
         pause(0.5);
         odometry(s)
-
-        else
+        
+    else
         a = false;
-        end
+    end
     
 end
+a = true;
 end
 
 function vecAngle = getBearing(goalX,goalY)
@@ -251,7 +259,7 @@ function obstacleFollow(s,goalX,goalY)
     startTime = clock;
     while (abs(vecAngle - angle) > 0.1 || etime(currentTime,startTime) < 3)
     %while etime(currentTime,startTime) < 3
-        if sensorVals(1)> 140 || sensorVals(2) > 150 || sensorVals(3)>150  
+        if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 140 
             disp('TOO CLOSE');
             fprintf(s,'D,1,-1');
             fscanf(s);
@@ -326,6 +334,24 @@ sensorString = fscanf(s);
 splitString = regexp(sensorString,',','split');
 lightVals = cellfun (@str2num,splitString(2:end));
 end
+
+function dropFood(s)
+    for i=1:3
+        fprintf(s,'L,0,1');
+        fscanf(s);
+        fprintf(s,'L,1,1');
+        fscanf(s);
+        pause(.1);
+        fprintf(s,'L,0,0');
+        fscanf(s);
+        fprintf(s,'L,1,0');
+        fscanf(s);
+        pause(.1);
+        i = i+ 1;
+    end
+end
+
+
 
 function setFoodFlag(~,~)
 foodFlag = 1;
