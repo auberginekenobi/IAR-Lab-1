@@ -1,25 +1,10 @@
-function Main
+
+function Main2
 s = serial('/dev/ttyS0');
 fclose(s);
 fopen(s);
 setCounts(s,0,0);
-global plotHandle;
-global figHandle;
-figHandle = figure;
-arena = imread('arena-bw.jpg');
-global arenaScaled;
-arenaScaled = imresize(arena, 10.646);
-imshow(arenaScaled);
-hold on;
-
-% Setup input window and flag
-figure('Position',[50,800,250,250],'MenuBar','none','Name','Food found input','NumberTitle','off');
-set(gcf,'WindowButtonDownFcn',@setFoodFlag); % Mouse click
-set(gcf,'KeyPressFcn',@setFlag); % Key press
-foodFlag = 0;
-
-
-
+figure; 
 global runTime;
 runTime = 40;
 global a
@@ -49,28 +34,7 @@ while etime(currentTime,startTime) < runTime
 
     currentTime = clock;
 end
-% Start main loop
-% while(1)
-%     
-%     
-%     % Do your normal robot control stuff
-%     % ...
-%     
-%     
-%     % Check for click on food window
-%     if foodFlag == 1
-%         
-%         % Do food finding stuff
-%         % ...
-%         disp('Food found!');
-%         
-%         foodFlag = 0; % Reset flag
-%         
-%     end
-%     
-%     drawnow; % Need this to register button presses
-%     
-% end
+
 goTo(s,0,0)
 fprintf(s,'D,0,0');
 fscanf(s);
@@ -84,7 +48,7 @@ function wallFollow(s)
     global runTime;
     sensorVals = readIR(s);
     while sensorVals(1)>70 || sensorVals(3)>130 || sensorVals(5) > 130
-        sensorVals = readIR(s);
+        sensorVals = readIR(s)
         currentTime = clock;
         if etime(currentTime,startTime) > runTime
             break
@@ -113,8 +77,6 @@ function wallFollow(s)
 end
 
 function odometry(s)
-global figHandle;
-global plotHandle;
 global angle;
 global x;
 global y;
@@ -131,10 +93,8 @@ global xlist;
 global ylist;
 xlist = cat(2,xlist,x);
 ylist = cat(2,ylist,y);
-figure(figHandle);
-delete(findobj(figHandle,'Color','b'));
-plotHandle = plot(9368.5+xlist,7558.7-ylist);
-plotHandle.Color = 'b';
+                                                                                                              
+plot(xlist,ylist);
 title('Khepera Odometry Graph');
 xlabel('x');
 ylabel('y');
@@ -321,8 +281,4 @@ fprintf(s,'O');
 sensorString = fscanf(s);
 splitString = regexp(sensorString,',','split');
 lightVals = cellfun (@str2num,splitString(2:end));
-end
-
-function setFoodFlag(~,~)
-foodFlag = 1;
 end
