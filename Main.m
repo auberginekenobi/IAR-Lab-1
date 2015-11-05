@@ -3,6 +3,7 @@ s = serial('/dev/ttyS0');
 fclose(s);
 fopen(s);
 setCounts(s,0,0);
+global foodFlag;
 global plotHandle;
 global figHandle;
 figHandle = figure;
@@ -14,8 +15,10 @@ hold on;
 
 % Setup input window and flag
 figure('Position',[50,800,250,250],'MenuBar','none','Name','Food found input','NumberTitle','off');
+global fig;
+fig = gcf;
 set(gcf,'WindowButtonDownFcn',@setFoodFlag); % Mouse click
-set(gcf,'KeyPressFcn',@setFlag); % Key press
+set(gcf,'KeyPressFcn',@setFoodFlag); % Key press
 foodFlag = 0;
 
 
@@ -43,36 +46,53 @@ global currentTime;
 startTime = clock;
 fix(startTime);
 currentTime = clock;
-while etime(currentTime,startTime) < runTime
-    goTo(s,4258,2875);
-    currentTime = clock;
-end
+% while etime(currentTime,startTime) < runTime
+%     goTo(s,820,4503);
+%     currentTime = clock;
+% end
 
 % explore(s)
+global foodAmount;
+global homeFood;
+global foodLocsX;
+global foodLocsY;
 
+foodAmount = 0;
+homeFood =0;
+foodLocsX = [];
+foodLocsY = [];
 % Start main loop
-% while(1)
-%     
-%     
-%     % Do your normal robot control stuff
-%     % ...
+while(1)
     
-%     
-%     
-%     % Check for click on food window
-%     if foodFlag == 1
-%         
-%         % Do food finding stuff
-%         % ...
-%         disp('Food found!');
-%         
-%         foodFlag = 0; % Reset flag
-%         
-%     end
-%     
-%     drawnow; % Need this to register button presses
-%     
-% end
+    
+    % Do your normal robot control stuff
+    % ...
+    explore(s)
+       
+    % Check for click on food window
+    if foodFlag == 1
+        
+        % Do food finding stuff
+        % ...
+        disp('Food found!');
+        foodAmount = foodAmount + 1;
+        foodLocsX = cat(2,foodLocsX,x);
+        foodLocsY = cat(2,foodLocsY,y);
+        
+        foodFlag = 0; % Reset flag
+        
+    end
+    
+    drawnow; % Need this to register button presses
+    
+    goTo(s,0,0)
+    fprintf(s,'D,0,0');
+    fscanf(s);
+    homeFood = homeFood + foodAmount;
+    dropFood(s)
+    foodAmount = 0;
+    
+end
 goTo(s,0,0)
 fprintf(s,'D,0,0');
 fscanf(s);
@@ -133,6 +153,7 @@ global x;
 global y;
 global countsPrev;
 global countsCur;
+global fig;
 counts = readCounts(s);
 countsCur = counts- countsPrev; 
 countsPrev = counts;
@@ -151,6 +172,8 @@ plotHandle.Color = 'r';
 title('Khepera Odometry Graph');
 xlabel('x');
 ylabel('y');
+% set(0,'CurrentFigure','Food found input')
+figure(fig);
 
  
 end
@@ -177,6 +200,33 @@ fprintf(s,'D,0,0');
 fscanf(s);
 end
 
+function foodCheck
+global x;
+global y;
+global foodAmount;
+global foodLocsX;
+global foodLocsY;
+global foodFlag;
+
+% Check for click on food window
+if foodFlag == 1
+    
+    % Do food finding stuff
+    disp('Food found!');
+    fprintf(s,'D,0,0');
+    fscanf(s);
+    pause(1);
+    foodAmount = foodAmount + 1;
+    foodLocsX = cat(2,foodLocsX,x);
+    foodLocsY = cat(2,foodLocsY,y);
+    
+    foodFlag = 0; % Reset flag
+    
+end
+
+drawnow; % Need this to register button presses
+end
+
 function goTo(s,goalX,goalY)
 global angle;
 global x;
@@ -194,6 +244,7 @@ while a == true
                 pause(0.1);
                 odometry(s)
                 vecAngle = getBearing(goalX,goalY);
+                foodCheck;
             end
         else 
             while angle > vecAngle+0.2 || angle < vecAngle-0.2
@@ -203,9 +254,11 @@ while a == true
                 pause(0.1);
                 odometry(s)
                 vecAngle = getBearing(goalX,goalY);
+                foodCheck;
              end
         end
         odometry(s)
+        foodCheck;
         sensorVals = readIR(s);
         % senses and avoids obstacles
         if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 140
@@ -216,6 +269,7 @@ while a == true
         disp('Moving forward to goal');
         pause(0.5);
         odometry(s)
+        foodCheck;
         
     else
         a = false;
@@ -257,6 +311,7 @@ function obstacleFollow(s,goalX,goalY)
     global currentTime;
     global startTime;
     startTime = clock;
+    foodCheck;
     while (abs(vecAngle - angle) > 0.1 || etime(currentTime,startTime) < 3)
     %while etime(currentTime,startTime) < 3
         if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 140 
@@ -281,6 +336,7 @@ function obstacleFollow(s,goalX,goalY)
         
         sensorVals = readIR(s);
         odometry(s)
+        foodCheck;
         vecAngle = getBearing(goalX,goalY);
         pause(.05)
         currentTime = clock;
