@@ -3,49 +3,39 @@ s = serial('/dev/ttyS0');
 fclose(s);
 fopen(s);
 setCounts(s,0,0);
-global corners;
+global runTime startTime currentTime;
+global a x y angle countsPrev countsCur xlist ylist; 
+global corners foodFlag plotHandle figHandle arenaCleared RG1 fig;
+
 load('corners.mat','cornerlist');
 corners = cornerlist;
-global foodFlag;
-global plotHandle;
-global figHandle;
 figHandle = figure;
 arena = imread('arena-bw.jpg');
-global arenaScaled;
 arenaScaled = imresize(arena, 10.646);
-imshow(arenaScaled);
+thresh = graythresh(arenaScaled);
+BW = im2bw(arenaScaled, thresh);
+arenaCleared = bwareaopen(BW, 100000);
+imshow(arenaCleared);
+[label, num] = bwlabel(arenaCleared);
+RG1 = regionprops(label,'Centroid');
 hold on;
-
 % Setup input window and flag
 figure('Position',[50,800,250,250],'MenuBar','none','Name','Food found input','NumberTitle','off');
-global fig;
 fig = gcf;
 set(gcf,'WindowButtonDownFcn',@setFoodFlag); % Mouse click
 set(gcf,'KeyPressFcn',@setFoodFlag); % Key press
 foodFlag = 0;
 
-
-
-global runTime;
 runTime = 60;
-global a
 a=true;
-global x;
 x = 0.0;
-global y;
 y = 0.0;
-global angle;
 angle = 0.0;
-global countsPrev;
 countsPrev = 0;     
-global countsCur;
 countsCur = 0;
-global xlist;
 xlist = [];
-global ylist;
 ylist =  [];
-global startTime;
-global currentTime;
+
 startTime = clock;
 fix(startTime);
 currentTime = clock;
@@ -55,10 +45,7 @@ currentTime = clock;
 % end
 
 % explore(s)
-global foodAmount;
-global homeFood;
-global foodLocsX;
-global foodLocsY;
+global foodAmount homeFood foodLocsX foodLocsY;
 
 foodAmount = 0;
 homeFood =0;
@@ -67,7 +54,7 @@ foodLocsY = [];
 % Start main loop
 explore(s);
 dropFood(s);
-while(1)
+while etime(currentTime,startTime) < runTime-20
     
     
     % Do your normal robot control stuff
@@ -75,21 +62,7 @@ while(1)
     forage(s)
        
     % Check for click on food window
-    if foodFlag == 1
-        
-        % Do food finding stuff
-        % ...
-        disp('Food found!');
-        foodAmount = foodAmount + 1;
-        disp(foodAmount);
-        foodLocsX = cat(2,foodLocsX,x);
-        foodLocsY = cat(2,foodLocsY,y);
-        
-        foodFlag = 0; % Reset flag
-        
-
-
-    end
+    foodCheck(s);
 
     dropFood(s);
 
@@ -116,8 +89,7 @@ end
 end
 
 function forage(s)
-global foodLocsX;
-global foodLocsY;
+global foodLocsX foodLocsY;
 for i =1:(size(foodLocsX,2))
     x = foodLocsX(i);
     y = foodLocsY(i);
@@ -127,49 +99,42 @@ end
 end
 
 
-function wallFollow(s)
-    global startTime;
-    global currentTime;
-    global runTime;
-    sensorVals = readIR(s);
-    while sensorVals(1)>70 || sensorVals(3)>130 || sensorVals(5) > 130
-        sensorVals = readIR(s);
-        currentTime = clock;
-        if etime(currentTime,startTime) > runTime
-            break
-            %halt(s)
-        elseif sensorVals(8)<200
-            disp('WALL FOLLOWING');
-            if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 110
-                disp('TOO CLOSE');
-                fprintf(s,'D,1,-1');
-                fscanf(s);
-            elseif sensorVals(1) < 105  
-                disp('TOO FAR AWAY');
-                fprintf(s,'D,-1,1');
-                fscanf(s);
-            else
-                disp('Following wall');
-                fprintf(s,'D,5,5');
-                fscanf(s);
-            end
-            odometry(s)
-            pause(.05)
-         else
-             %halt(s);
-         end
-    end
-end
+% function wallFollow(s)
+%     global startTime;
+%     global currentTime;
+%     global runTime;
+%     sensorVals = readIR(s);
+%     while sensorVals(1)>70 || sensorVals(3)>130 || sensorVals(5) > 130
+%         sensorVals = readIR(s);
+%         currentTime = clock;
+%         if etime(currentTime,startTime) > runTime
+%             break
+%             %halt(s)
+%         elseif sensorVals(8)<200
+%             disp('WALL FOLLOWING');
+%             if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 110
+%                 disp('TOO CLOSE');
+%                 fprintf(s,'D,1,-1');
+%                 fscanf(s);
+%             elseif sensorVals(1) < 105  
+%                 disp('TOO FAR AWAY');
+%                 fprintf(s,'D,-1,1');
+%                 fscanf(s);
+%             else
+%                 disp('Following wall');
+%                 fprintf(s,'D,5,5');
+%                 fscanf(s);
+%             end
+%             odometry(s)
+%             pause(.05)
+%          else
+%              %halt(s);
+%          end
+%     end
+% end
 
 function odometry(s)
-global figHandle;
-global plotHandle;
-global angle;
-global x;
-global y;
-global countsPrev;
-global countsCur;
-global fig;
+global figHandle plotHandle angle x y countsPrev countsCur fig;
 counts = readCounts(s);
 countsCur = counts- countsPrev; 
 countsPrev = counts;
@@ -197,9 +162,7 @@ function forward(s)
 fprintf(s,'D,5,5');
 fscanf(s);
 sensorVals = readIR(s);
-global startTime;
-global currentTime;
-global runTime;
+global startTime currentTime runTime;
 disp('hi, im driving forward');
 while (sensorVals(3)<130 && sensorVals(5) < 130 && sensorVals(2) <130)
    sensorVals = readIR(s);
@@ -216,12 +179,7 @@ fscanf(s);
 end
 
 function foodCheck(s)
-global x;
-global y;
-global foodAmount;
-global foodLocsX;
-global foodLocsY;
-global foodFlag;
+global x y foodAmount foodLocsX foodLocsY foodFlag;
 
 % Check for click on food window
 if foodFlag == 1
@@ -243,10 +201,7 @@ drawnow; % Need this to register button presses
 end
 
 function goTo(s,goalX,goalY)
-global angle;
-global x;
-global y;
-global a;
+global angle x y a;
 while a == true 
     vecAngle = getBearing(goalX,goalY);
     odometry(s)
@@ -295,8 +250,7 @@ a = true;
 end
 
 function vecAngle = getBearing(goalX,goalY)
-global x;
-global y;
+global x y;
 
 difX = goalX - x;
 difY = goalY - y;
@@ -319,9 +273,7 @@ vecAngle = mod(vecAngle,2*pi);
 end
 
 function obstacleFollow2(s,goalX,goalY)
-global angle;
-global x;
-global y;
+global angle x y RG1;
 mindistance = 400000;
 obstacleid = 0;
 vecAngle = getBearing(goalX,goalY);
@@ -333,21 +285,62 @@ for i=1:size(corners,1)
         mindistance = distance;
         obstacleid = corners(i,3);
     end
-
 end
 % obtain a submatrix of those corners
+subX = [];
+subY = [];
+for i=1:size(corners,1)
+    if corners(i,3) == obstacleid
+        subX = cat(2,subX,corners(i,1));
+        subY = cat(2,subY,corners(i,2));
+    end
+end
+% use submatrix to calculate which direction to turn
+gradient = ((goalY-y)/(goalX-x));
+c = y - gradient*x;
+fun=@(t) gradient*t + c;
 
+id = 0;
+centroids = cat(2, RG1.Centroid);
+centroids(:,1) = (10.646*centroids(:,1))-9368.5;
+centroids(:,2) = -(10.646*centroids(:,2)) + 7558.7;
+mindistance = 40000;
+for i=1:size(centroids,2)
+    distance = euclidean(x-centroids(i,1),y-centroids(i,2));
+    if distance < mindistance
+        mindistance = distance;
+        nearCent = centroids(i,:);
+        id = i;
+    end
+end
+% decide to turn left or right
+vecObstacle = getBearing(nearCent(1),nearCent(2));
+
+difBearing = vecAngle - vecObstacle;
+   
+if (difBearing <= pi && difBearing >= 0 && id~=1) || (~(difBearing <= pi && difBearing >= 0) && id == 1) 
+    %wallFollow(s,-1)
+    direction = -1;
+else 
+    direction = 1;
+    %wallFollow(s,1)
+end
 % wallFollow until our angle with each corner exceeds a certain amount
-
+while ~(difBearing > pi/2 && difBearing < 3*pi/2)
+    wallFollow(s,direction);
+    vecAngle = getBearing(goalX,goalY);
+    vecObstacle = getBearing(nearCent(1),nearCent(2));
+    difBearing = vecAngle - vecObstacle;
+end
 end
 
 function distance = euclidean(x,y)
     distance = sqrt(x^2+y^2);
 end
 
-function wallFollow(d)
+function wallFollow(s,d)
     %     right = 1, left = -1
-
+sensorVals = readIR(s);
 if d==1
     if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 140
         disp('TOO CLOSE');
@@ -381,12 +374,11 @@ end
 
 
 function obstacleFollow(s,goalX,goalY)
-    global angle;
+    global angle currentTime startTime;
     
     vecAngle = getBearing(goalX,goalY);
     sensorVals = readIR(s);
-    global currentTime;
-    global startTime;
+
     startTime = clock;
     foodCheck(s);
     while (abs(vecAngle - angle) > 0.1 || etime(currentTime,startTime) < 3)
@@ -469,8 +461,7 @@ lightVals = cellfun (@str2num,splitString(2:end));
 end
 
 function dropFood(s)
-global foodAmount;
-global homeFood;
+global foodAmount homeFood;
 goTo(s,0,0);
 fprintf(s,'D,0,0');
 fscanf(s);
