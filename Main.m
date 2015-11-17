@@ -26,7 +26,7 @@ set(gcf,'WindowButtonDownFcn',@setFoodFlag); % Mouse click
 set(gcf,'KeyPressFcn',@setFoodFlag); % Key press
 foodFlag = 0;
 
-runTime = 60;
+runTime = 300;
 a=true;
 x = 0.0;
 y = 0.0;
