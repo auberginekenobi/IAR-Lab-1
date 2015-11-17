@@ -6,12 +6,6 @@ setCounts(s,0,0);
 global runTime startTime currentTime;
 global a x y angle countsPrev countsCur xlist ylist; 
 global corners foodFlag plotHandle figHandle arenaCleared RG1 fig;
-global foodAmount homeFood foodLocsX foodLocsY;
-
-foodAmount = 0;
-homeFood = 0;
-foodLocsX = [];
-foodLocsY = [];
 
 load('corners.mat','cornerlist');
 corners = cornerlist;
@@ -32,7 +26,7 @@ set(gcf,'WindowButtonDownFcn',@setFoodFlag); % Mouse click
 set(gcf,'KeyPressFcn',@setFoodFlag); % Key press
 foodFlag = 0;
 
-runTime = 300;
+runTime = 60;
 a=true;
 x = 0.0;
 y = 0.0;
@@ -51,8 +45,12 @@ currentTime = clock;
 % end
 
 % explore(s)
+global foodAmount homeFood foodLocsX foodLocsY;
 
-
+foodAmount = 0;
+homeFood =0;
+foodLocsX = [];
+foodLocsY = [];
 % Start main loop
 explore(s);
 dropFood(s);
@@ -197,9 +195,21 @@ if foodFlag == 1
     fscanf(s);
     pause(1);
     foodAmount = foodAmount + 1;
-    foodLocsX = cat(2,foodLocsX,x);
-    foodLocsY = cat(2,foodLocsY,y);
-    
+    check = true;
+    for i=1:size(foodLocsX,2)
+        xdif = x - foodLocsX(i);
+        ydif = y -foodLocsY(i);
+        distance = euclidean(xdif,ydif);
+        if distance <500
+            
+            check = false;
+        end
+    end
+    if check == true
+        disp('Adding food location');
+        foodLocsX = cat(2,foodLocsX,x);
+        foodLocsY = cat(2,foodLocsY,y);
+    end
     foodFlag = 0; % Reset flag
     
 end
@@ -209,7 +219,6 @@ end
 
 function goTo(s,goalX,goalY)
 global angle x y a;
-
 while a == true 
     vecAngle = getBearing(goalX,goalY);
     odometry(s)
@@ -248,13 +257,12 @@ while a == true
         pause(0.5);
         odometry(s)
         foodCheck(s);
-
+        
     else
         a = false;
     end
-
+    
 end
-
 a = true;
 end
 
@@ -282,7 +290,7 @@ vecAngle = mod(vecAngle,2*pi);
 end
 
 function obstacleFollow2(s,goalX,goalY)
-global x y RG1;
+global angle x y RG1;
 mindistance = 400000;
 obstacleid = 0;
 disp('entering obstaclefollow');
@@ -322,7 +330,8 @@ centroids = centroids/10;
 centroids(:,1) = (10.646*centroids(:,1))-9368.5;
 centroids(:,2) = (10.646*centroids(:,2)) -7558.7;
 centroids(:,2) = -centroids(:,2);
-
+x
+y
 for i=1:size(centroids,1)
     distance = euclidean(x-centroids(i,1),y-centroids(i,2))
     if distance < mindistance
@@ -353,20 +362,7 @@ while ~(difBearing > pi/2 && difBearing < 3*pi/2)
     sensorVals = readIR(s);
     odometry(s)
     if direction ==-1
-        if (sensorVals(1)> 140 || sensorVals(2) > 140 || sensorVals(3)>140) && (sensorVals(4) >140 || sensorVals(5) > 140)
-           sensorsLeft = sensorVals(1) + sensorVals(2) + sensorVals(3);
-           sensorsRight = sensorVals(4) + sensorVals(5);
-           disp('Close on both sides');
-           if sensorsRight > sensorsLeft
-               disp('Closer on RIGHT');
-               fprintf(s,'D,2,3');
-               fscanf(s);
-           else
-               disp('Closer on LEFT');
-               fprintf(s,'D,3,2');
-               fscanf(s);
-           end
-        elseif sensorVals(1)> 140 || sensorVals(2) > 140 || sensorVals(3)>140 || sensorVals(4) >140 || sensorVals(5) > 140
+        if sensorVals(1)> 165 || sensorVals(2) > 165 || sensorVals(3)>140 || sensorVals(4) >140 || sensorVals(5) > 165
             disp('TOO CLOSE');
             fprintf(s,'D,1,-1');
             fscanf(s);
@@ -380,7 +376,7 @@ while ~(difBearing > pi/2 && difBearing < 3*pi/2)
             fscanf(s);
         end
     else
-        if sensorVals(1)> 140 || sensorVals(2) > 140 || sensorVals(3)>140 || sensorVals(4) >140 || sensorVals(5) > 140
+        if sensorVals(1)> 165 || sensorVals(2) > 165 || sensorVals(3)>140 || sensorVals(4) >140 || sensorVals(5) > 165
             disp('TOO CLOSE');
             fprintf(s,'D,-1,1');
             fscanf(s);
@@ -400,10 +396,9 @@ while ~(difBearing > pi/2 && difBearing < 3*pi/2)
     vecAngle = getBearing(goalX,goalY)
     vecObstacle = getBearing(nearCent(1),nearCent(2))
     difBearing = vecObstacle - vecAngle
-
+   
 
 end
-
 disp('---around the obstacle---');
 odometry(s)
 goTo(s,goalX,goalY);

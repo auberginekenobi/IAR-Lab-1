@@ -1,28 +1,50 @@
 function test()
+delete(instrfindall);
+
 s = serial('/dev/ttyS0');
 fopen(s);
-setCounts(s,0,0);
-figure;
-global countsPrev;
-countsPrev = 0;
-global a
-a=true;
-global x;
-x = 0.0;
-global y;
-y = 0.0;
-global angle;
-
-angle = 0.0;
-global xlist;
-xlist = [];
-global ylist;
-ylist =  [];
-
-
-
+fprintf(s,'net');
+fscanf(s)
+% fprintf(s,'list');
+% fscanf(s)
+% pause(5);
+% fprintf(s,'T,116,Z');
+% fscanf(s)
+% fprintf(s,'T,116,X');
+% fscanf(s)
+% fprintf(s,'T,116,R,32');
+% fscanf(s)
+% for i=33:63
+%     disp(i);
+%     fprintf(s,'T,116,R,%d',i);
+%     fscanf(s)
+%     fprintf(s,'R,%d',i);
+%     fscanf(s)
+%     fprintf(s,'T,%d,Z',i);
+%     fscanf(s)
+% 
+% end
+% % pause(0.5);
+fprintf(s,'D,2,2');
+fscanf(s)
+pause(2);
+fprintf(s,'D,0,0');
+fscanf(s)
+fclose(s);
 end
-
+% for i=1:3
+%     fprintf(s,'L,0,1');
+%     fscanf(s);
+%     fprintf(s,'L,1,1');
+%     fscanf(s);
+%     pause(.1);
+%     fprintf(s,'L,0,0');
+%     fscanf(s);
+%     fprintf(s,'L,1,0');
+%     fscanf(s);
+%     pause(.1);
+%     i = i+ 1;
+% end
 function odometry(s)
 global angle;
 global x;
