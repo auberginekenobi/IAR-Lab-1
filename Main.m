@@ -222,10 +222,10 @@ global angle x y a;
 while a == true 
     vecAngle = getBearing(goalX,goalY);
     odometry(s)
-    if ((goalX-122) > x || x > (goalX +122) || (goalY-122) > y || y > (goalY +122) )
+    if ((goalX-183) > x || x > (goalX +183) || (goalY-183) > y || y > (goalY +183) )
         if (angle-vecAngle)<0
             while angle > vecAngle+0.2 || angle < vecAngle-0.2
-                fprintf(s,'D,2,-2');
+                fprintf(s,'D,3,-3');
                 fscanf(s);
                 disp('Turning right to bearing');
                 pause(0.1);
@@ -235,7 +235,7 @@ while a == true
             end
         else 
             while angle > vecAngle+0.2 || angle < vecAngle-0.2
-                fprintf(s,'D,-2,2');
+                fprintf(s,'D,-3,3');
                 fscanf(s);
                 disp('Turning left to bearing');
                 pause(0.1);
@@ -251,7 +251,7 @@ while a == true
         if sensorVals(1)> 160 || sensorVals(2) > 160 || sensorVals(3)>160 || sensorVals(4) >160 || sensorVals(5) > 160
             obstacleFollow2(s,goalX,goalY)
         end
-        fprintf(s,'D,5,5');
+        fprintf(s,'D,6,6');
         fscanf(s);
         disp('Moving forward to goal');
         pause(0.5);
@@ -347,22 +347,22 @@ odometry(s)
 % decide to turn left or right
 vecObstacle = getBearing(nearCent(1),nearCent(2))
 
-difBearing = vecObstacle - vecAngle
+difBearing = mod((vecAngle - vecObstacle),(2*pi));
    
 if (difBearing <= pi && difBearing >= 0 && id~=1) || (~(difBearing <= pi && difBearing >= 0) && id == 1) 
     %wallFollow(s,-1)
-    direction = -1;
+    direction = -1; % right
 else 
-    direction = 1;
+    direction = 1; % left
     %wallFollow(s,1)
 end
 % wallFollow until our angle with each corner exceeds a certain amount
 
-while ~(difBearing > pi/2 && difBearing < 3*pi/2)
+while (difBearing < 2*pi/3 || difBearing > 4*pi/3)
     sensorVals = readIR(s);
     odometry(s)
-    if direction ==-1
-        if sensorVals(1)> 165 || sensorVals(2) > 165 || sensorVals(3)>140 || sensorVals(4) >140 || sensorVals(5) > 165
+    if direction ==-1 % right
+        if sensorVals(1)> 170 || sensorVals(2) > 170 || sensorVals(3)>145 || sensorVals(4) >145 || sensorVals(5) > 170
             disp('TOO CLOSE');
             fprintf(s,'D,1,-1');
             fscanf(s);
@@ -375,8 +375,8 @@ while ~(difBearing > pi/2 && difBearing < 3*pi/2)
             fprintf(s,'D,2,3');
             fscanf(s);
         end
-    else
-        if sensorVals(1)> 165 || sensorVals(2) > 165 || sensorVals(3)>140 || sensorVals(4) >140 || sensorVals(5) > 165
+    else % left
+        if sensorVals(1)> 170 || sensorVals(2) > 170 || sensorVals(3)>145 || sensorVals(4) >145 || sensorVals(5) > 170
             disp('TOO CLOSE');
             fprintf(s,'D,-1,1');
             fscanf(s);
@@ -395,7 +395,7 @@ while ~(difBearing > pi/2 && difBearing < 3*pi/2)
     pause(0.25);
     vecAngle = getBearing(goalX,goalY)
     vecObstacle = getBearing(nearCent(1),nearCent(2))
-    difBearing = vecObstacle - vecAngle
+    difBearing = mod((vecAngle - vecObstacle),(2*pi))
    
 
 end
