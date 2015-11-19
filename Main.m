@@ -258,12 +258,10 @@ end
 function obstacleFollow2(s,goalX,goalY)
 global angle x y RG1;
 mindistance = 400000;
-obstacleid = 0;
 disp('entering obstaclefollow');
 odometry(s)
 
-vecAngle = getBearing(goalX,goalY)
-global corners;
+vecAngle = getBearing(goalX,goalY);
 
 id = 0;
 centroids = cat(1, RG1.Centroid);
@@ -273,9 +271,9 @@ centroids(:,2) = (10.646*centroids(:,2)) -7558.7;
 centroids(:,2) = -centroids(:,2);
 
 for i=1:size(centroids,1)
-    distance = euclidean(x-centroids(i,1),y-centroids(i,2))
+    distance = euclidean(x-centroids(i,1),y-centroids(i,2));
     if distance < mindistance
-        mindistance = distance
+        mindistance = distance;
         nearCent = centroids(i,:);
         id = i;
     end
@@ -284,7 +282,7 @@ end
 disp('done obst calculations');
 odometry(s)
 % decide to turn left or right
-vecObstacle = getBearing(nearCent(1),nearCent(2))
+vecObstacle = getBearing(nearCent(1),nearCent(2));
 
 difBearing = mod((vecAngle - vecObstacle),(2*pi));
    
@@ -332,9 +330,9 @@ while (difBearing < 2*pi/3 || difBearing > 4*pi/3)
     end
     odometry(s)
     pause(0.25);
-    vecAngle = getBearing(goalX,goalY)
-    vecObstacle = getBearing(nearCent(1),nearCent(2))
-    difBearing = mod((vecAngle - vecObstacle),(2*pi))
+    vecAngle = getBearing(goalX,goalY);
+    vecObstacle = getBearing(nearCent(1),nearCent(2));
+    difBearing = mod((vecAngle - vecObstacle),(2*pi));
    
 
 end
