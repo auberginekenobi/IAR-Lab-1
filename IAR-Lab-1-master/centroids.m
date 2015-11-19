@@ -1,0 +1,11 @@
+arena = imread('arena-bw.jpg');
+arenaScaled = imresize(arena, 10.646);
+thresh = graythresh(arenaScaled);
+BW = im2bw(arenaScaled, thresh);
+arenaCleared = bwareaopen(BW, 100000);
+[label, num] = bwlabel(arenaCleared);
+RG1 = regionprops(label,'Centroid','Image');
+centroids = cat(1, RG1.Centroid);
+centroids(:,1) = (10.646*centroids(:,1))-93685;
+centroids(:,2) = (10.646*centroids(:,2)) + 75587;
+centroids(:,2) = (-centroids(:,2));
