@@ -39,12 +39,7 @@ ylist =  [];
 startTime = clock;
 fix(startTime);
 currentTime = clock;
-% while etime(currentTime,startTime) < runTime
-%     goTo(s,820,4503);
-%     currentTime = clock;
-% end
 
-% explore(s)
 global foodAmount homeFood foodLocsX foodLocsY;
 
 foodAmount = 0;
@@ -344,6 +339,7 @@ end
 function distance = euclidean(x,y)
     distance = sqrt(x^2+y^2);
 end
+
 
 function halt(s)
     fprintf(s,'D,0,0');
