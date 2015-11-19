@@ -104,40 +104,6 @@ end
 end
 
 
-% function wallFollow(s)
-%     global startTime;
-%     global currentTime;
-%     global runTime;
-%     sensorVals = readIR(s);
-%     while sensorVals(1)>70 || sensorVals(3)>130 || sensorVals(5) > 130
-%         sensorVals = readIR(s);
-%         currentTime = clock;
-%         if etime(currentTime,startTime) > runTime
-%             break
-%             %halt(s)
-%         elseif sensorVals(8)<200
-%             disp('WALL FOLLOWING');
-%             if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 110
-%                 disp('TOO CLOSE');
-%                 fprintf(s,'D,1,-1');
-%                 fscanf(s);
-%             elseif sensorVals(1) < 105  
-%                 disp('TOO FAR AWAY');
-%                 fprintf(s,'D,-1,1');
-%                 fscanf(s);
-%             else
-%                 disp('Following wall');
-%                 fprintf(s,'D,5,5');
-%                 fscanf(s);
-%             end
-%             odometry(s)
-%             pause(.05)
-%          else
-%              %halt(s);
-%          end
-%     end
-% end
-
 function odometry(s)
 global figHandle plotHandle angle x y countsPrev countsCur fig;
 counts = readCounts(s);
@@ -298,31 +264,6 @@ odometry(s)
 
 vecAngle = getBearing(goalX,goalY)
 global corners;
-% find which object we've encountered
-% for i=1:size(corners,1)
-%     distance = euclidean(x-corners(i,1),y-corners(i,2));
-%     if distance < mindistance
-%         mindistance = distance;
-%         obstacleid = corners(i,3);
-%     end
-
-% end
-% obtain a submatrix of those corners
-
-% subX = [];
-% subY = [];
-% for i=1:size(corners,1)
-%     if cornersensorVals = readIR(s);
-% s(i,3) == obstacleid
-%         subX = cat(2,subX,corners(i,1));
-%         subY = cat(2,subY,corners(i,2));
-%     end
-
-% end
-% use submatrix to calculate which direction to turn
-gradient = ((goalY-y)/(goalX-x));
-c = y - gradient*x;
-fun=@(t) gradient*t + c;
 
 id = 0;
 centroids = cat(1, RG1.Centroid);
@@ -330,8 +271,7 @@ centroids = centroids/10;
 centroids(:,1) = (10.646*centroids(:,1))-9368.5;
 centroids(:,2) = (10.646*centroids(:,2)) -7558.7;
 centroids(:,2) = -centroids(:,2);
-x
-y
+
 for i=1:size(centroids,1)
     distance = euclidean(x-centroids(i,1),y-centroids(i,2))
     if distance < mindistance
@@ -340,8 +280,7 @@ for i=1:size(centroids,1)
         id = i;
     end
 end
-nearCent
-id
+
 disp('done obst calculations');
 odometry(s)
 % decide to turn left or right
@@ -406,99 +345,6 @@ end
 
 function distance = euclidean(x,y)
     distance = sqrt(x^2+y^2);
-end
-
-% function wallFollow(s,d,difBearing,goalX,goalY,nearCent)
-%     %     right = 1, left = -1
-% sensorVals = readIR(s);
-% while ~(difBearing > pi/2 && difBearing < 3*pi/2)
-%     if d==1
-%         if sensorVals(1)> 140 || sensorVals(2) > 140 || sensorVals(3)>140 || sensorVals(4) >140 || sensorVals(5) > 140
-%             %disp('TOO CLOSE');
-%             fprintf(s,'D,1,-1');
-%             fscanf(s);
-%         elseif sensorVals(1) <100
-%             %disp('TOO FAR AWAY');
-%             fprintf(s,'D,-1,1');
-%             fscanf(s);
-%         else
-%             %disp('Following wall');
-%             fprintf(s,'D,2,3');
-%             fscanf(s);
-%         end
-%     else
-%         if sensorVals(1)> 140 || sensorVals(2) > 140 || sensorVals(3)>140 || sensorVals(4) >140 || sensorVals(5) > 140
-%             %disp('TOO CLOSE');
-%             fprintf(s,'D,-1,1');
-%             fscanf(s);
-%         elseif sensorVals(6) <100
-%             %disp('TOO FAR AWAY');
-%             fprintf(s,'D,1,-1');
-%             fscanf(s);
-%         else
-%             %disp('Following wall');
-%             fprintf(s,'D,3,2');
-%             fscanf(s);
-%         end
-%     end
-%     odometry(s)
-%     sensorVals = readIR(s);
-%     vecAngle = getBearing(goalX,goalY);
-%     vecObstacle = getBearing(nearCent(1),nearCent(2));
-%     difBearing = vecAngle - vecObstacle;
-% end
-% end
-
-
-% function obstacleFollow(s,goalX,goalY)
-%     global angle currentTime startTime;
-%     odometry(s);
-%     vecAngle = getBearing(goalX,goalY);
-%     sensorVals = readIR(s);
-% 
-%     startTime = clock;
-%     foodCheck(s);
-%     while (abs(vecAngle - angle) > 0.1 || etime(currentTime,startTime) < 3)
-%     %while etime(currentTime,startTime) < 3
-%         if sensorVals(1)> 150 || sensorVals(2) > 150 || sensorVals(3)>150 || sensorVals(4) >140 || sensorVals(5) > 140 
-%             disp('TOO CLOSE');
-%             fprintf(s,'D,1,-1');
-%             fscanf(s);
-%         elseif sensorVals(1) <110
-%             disp('TOO FAR AWAY');
-%             fprintf(s,'D,-1,1');
-%             fscanf(s);
-%         else
-%             disp('Following wall');
-%             fprintf(s,'D,2,3');
-%             fscanf(s);
-%         end
-%         % breaks wallfollow after 20 seconds. good for breaking out of infinite
-%         % 'obstacles', aka walls.
-%         
-%         if etime (currentTime,startTime) > 40
-%             break;
-%         end
-%         
-%         sensorVals = readIR(s);
-%         odometry(s)
-%         foodCheck(s);
-%         vecAngle = getBearing(goalX,goalY);
-%         pause(.05)
-%         currentTime = clock;
-%     end
-% 
-% end
-
-function foundfood = pickupFood(s)
-    sensorVals=readIR(s);
-    %lightVals=readAmbient(s);
-    foundfood=true;
-    for i=1:8
-        if sensorVals(i)<200 %|| lightVals(i)>150 %lightvals is always 500 no matter what, idk why
-            foundfood=false;
-        end
-    end
 end
 
 function halt(s)
